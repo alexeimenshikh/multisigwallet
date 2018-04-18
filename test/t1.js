@@ -18,6 +18,7 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
     let adh_l = await adh_limit.deployed();
     let instance = await adh.deployed();
     let r = await instance.transfer(adh_l.address, 10000, {from: accounts[0]});
+    console.log(await adh_l.periodCount());
   });
 
   it("Test wallet balance", async () =>
@@ -56,8 +57,8 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
   {
     let instance = await adh_limit.deployed();
     await instance.confirmTransaction(1, {from: accounts[3]});
-    assert.equal(await instance.periodCount(), 2, "periodCount should be 2");
-    assert.equal(await instance.current_period(), 1, "current_period should be 1");
+    assert.equal(await instance.periodCount(), 4, "periodCount should be 4");
+    assert.equal(await instance.current_period(), 3, "current_period should be 3");
   });
 
   it ("Changing period", async () =>
@@ -66,7 +67,7 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
     sleep(10000);
     let instance = await adh_limit.deployed();
     await instance.updateCurrentPeriod({from: accounts[3]});
-    assert.equal(await instance.current_period(), 0, "current_period should be 0");
+    assert.equal(await instance.current_period(), 1, "current_period should be 1");
   });
 
   it("Submit transaction addPeriod (current time + 1000 seconds, limit 10000)", async () =>
@@ -83,8 +84,8 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
   {
     let instance = await adh_limit.deployed();
     await instance.confirmTransaction(2, {from: accounts[3]});
-    assert.equal(await instance.periodCount(), 3, "periodCount should be 3");
-    assert.equal(await instance.current_period(), 2, "current_period should be 2");
+    assert.equal(await instance.periodCount(), 5, "periodCount should be 5");
+    assert.equal(await instance.current_period(), 4, "current_period should be 4");
   });
 
   it("Submit transaction deactivatePeriod (current time + 1000 seconds)", async () =>
@@ -100,7 +101,7 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
   {
     let instance = await adh_limit.deployed();
     await instance.confirmTransaction(3, {from: accounts[2]});
-    assert.equal(await instance.current_period(), 0, "current_period should be 0");
+    assert.equal(await instance.current_period(), 1, "current_period should be 1");
   });
 
   it("Submit transaction transfer (to: accounts[4], value: 4000)", async () =>
@@ -135,8 +136,8 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
   {
     let instance = await adh_limit.deployed();
     await instance.confirmTransaction(5, {from: accounts[1]});
-    assert.equal(await instance.periodCount(), 4, "periodCount should be 4");
-    assert.equal(await instance.current_period(), 3, "current_period should be 3");
+    assert.equal(await instance.periodCount(), 6, "periodCount should be 6");
+    assert.equal(await instance.current_period(), 5, "current_period should be 5");
   });
 
   //wallet balance is now 6000, current transferred 4000, current limit is 5000

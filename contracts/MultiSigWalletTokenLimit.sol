@@ -454,18 +454,28 @@ contract MultiSigWalletTokenLimit is MultiSigWalletToken
   uint public current_period;
   uint public current_transferred;  //amount of transferred tokens in the current period
 
-  /// @dev Contract constructor sets initial owners, required number of confirmations and tokens_address.
+  /// @dev Contract constructor sets initial owners, required number of confirmations, initial periods' parameters and token address.
   /// @param _owners List of initial owners.
   /// @param _required Number of required confirmations.
+  /// @param _timestamps Timestamps of initial periods.
+  /// @param _limits Limits of initial periods. The length of _limits must be the same as _timestamps.
   /// @param _tokens_address Address of the ERC20 tokens contract.
-  function MultiSigWalletTokenLimit(address[] _owners, uint _required, address _tokens_address)
+  function MultiSigWalletTokenLimit(address[] _owners, uint _required, uint[] _timestamps, uint[] _limits, address _tokens_address)
     public MultiSigWalletToken(_owners, _required, _tokens_address)
   {
     periods[0].timestamp = 2**256 - 1;
     periods[0].limit = 2**256 - 1;
     periods[0].active = true;
-    periodCount = 1;
+    for (uint i = 0; i < _timestamps.length; i++)
+    {
+      periods[i + 1].timestamp = _timestamps[i];
+      periods[i + 1].limit = _limits[i];
+      periods[i + 1].active = true;
+    }
+    periodCount = 1 + _timestamps.length;
     current_period = 0;
+    if (_timestamps.length > 0)
+      current_period = 1;
     current_transferred = 0;
   }
 
