@@ -1,11 +1,3 @@
-function sleep(miliseconds) 
-{
-  var currentTime = new Date().getTime();
-  while (currentTime + miliseconds >= new Date().getTime()) 
-  {
-  }
-}
-
 var new_period;
 
 var adh = artifacts.require("AdHiveToken");
@@ -44,8 +36,10 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
 
   it ("Changing period to 3", async () =>
   {
-    await console.log("Pause for 4.5 seconds");
-    sleep(4500);
+    await console.log("Shift block timestamp for 50 seconds");
+    await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [50], id: 0});
+    await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_mine", params: [], id: 0});
+
     let instance = await adh_limit.deployed();
     await instance.updateCurrentPeriod({from: accounts[1]});
     assert.equal(await instance.current_period(), 3, "current_period should be 3");
@@ -95,8 +89,10 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
 
   it ("Changing period to 0", async () =>
   {
-    await console.log("Pause for 3 seconds");
-    sleep(3000);
+    await console.log("Shift block timestamp for 30 seconds");
+    await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [30], id: 0});
+    await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_mine", params: [], id: 0});
+
     let instance = await adh_limit.deployed();
     await instance.updateCurrentPeriod({from: accounts[1]});
     assert.equal(await instance.current_period(), 0, "current_period should be 0");
