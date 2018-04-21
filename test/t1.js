@@ -32,6 +32,8 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
     await instance.confirmTransaction(0, {from: accounts[2]});
     assert.equal(await instance.getWalletBalance(), 9900, "Should be 9900");
     assert.equal(await instance.current_period(), 1, "Should be 1");
+    assert.equal((await instance.periods(1))[1], 1000, "current_limit should be 1000");
+    assert.equal((await instance.periods(1))[2], 1000, "limit should be 1000");
   });
 
   it ("Changing period to 3", async () =>
@@ -43,7 +45,8 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
     let instance = await adh_limit.deployed();
     await instance.updateCurrentPeriod({from: accounts[1]});
     assert.equal(await instance.current_period(), 3, "current_period should be 3");
-    assert.equal((await instance.periods(3))[1], 3000, "limit should be 3000");
+    assert.equal((await instance.periods(3))[1], 3000, "current_limit should be 3000");
+    assert.equal((await instance.periods(3))[2], 6000, "limit should be 6000");
   });
 
   it("Submit transaction for 3000 tokens", async () =>
@@ -67,14 +70,14 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
     assert(await instance.balanceOf(accounts[3]), 3100, "Should be 3100");
   });
 
-  it("Submit transaction for more tokens", async () =>
+  it("Submit transaction for more 2901 tokens", async () =>
   {
     let instance = await adh_limit.deployed();
-    await instance.submitTransaction(accounts[3], 1000, {from: accounts[1]});
+    await instance.submitTransaction(accounts[3], 2901, {from: accounts[1]});
     assert.equal(await instance.transaction_count(), 3, "transaction_count should be 3");
   });
 
-  it("Confirm transaction 2", async () =>
+  it("Confirm transaction 2. Should throw error.", async () =>
   {
     let instance = await adh_limit.deployed();
     try
@@ -102,8 +105,36 @@ contract("MultisSig Wallet Token Limit", async(accounts) =>
   {
     let instance = await adh_limit.deployed();
     await instance.confirmTransaction(2, {from: accounts[2]});
-    assert.equal(await instance.getWalletBalance(), 5900, "Should be 5900");
+    assert.equal(await instance.getWalletBalance(), 3999, "Should be 3999");
     assert.equal(await instance.current_period(), 0, "current_period should be 0");
+  });
+
+  it("Submit transaction for zero tokens", async () =>
+  {
+    let instance = await adh_limit.deployed();
+    await instance.submitTransaction(accounts[3], 0, {from: accounts[1]});
+    assert.equal(await instance.transaction_count(), 4, "transaction_count should be 4");
+  });
+
+  it("Confirm transaction 3", async () =>
+  {
+    let instance = await adh_limit.deployed();
+    await instance.confirmTransaction(3, {from: accounts[2]});
+    assert.equal(await instance.getWalletBalance(), 3999, "Should be 3999");
+    assert.equal(await instance.current_period(), 0, "current_period should be 0");
+  });
+
+  it("Submit transaction to zero address. Should throw error.", async () =>
+  {
+    let instance = await adh_limit.deployed();
+    try
+    {
+      await instance.submitTransaction(0, 10, {from: accounts[1]});
+      assert.fail("Expected throw not received.");
+    } catch(err)
+    {
+      assert(err.toString().search('revert') >= 0, "Expected throw revert.");
+    }
   });
 
 })

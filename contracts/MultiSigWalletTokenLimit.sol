@@ -74,6 +74,7 @@ contract MultiSigWalletTokenLimit
   struct Period
   {
     uint timestamp;
+    uint current_limit;
     uint limit;
   }
 
@@ -103,7 +104,7 @@ contract MultiSigWalletTokenLimit
 
   modifier transactionExists(uint transaction_id) 
   {
-    require(transactions[transaction_id].value > 0);
+    require(transactions[transaction_id].to != 0);
     _;
   }
 
@@ -167,10 +168,13 @@ contract MultiSigWalletTokenLimit
 
     periods[0].timestamp = 2**256 - 1;
     periods[0].limit = 2**256 - 1;
+    uint total_limit = 0;
     for (i = 0; i < _timestamps.length; i++)
     {
       periods[i + 1].timestamp = _timestamps[i];
-      periods[i + 1].limit = _limits[i];
+      periods[i + 1].current_limit = _limits[i];
+      total_limit = total_limit.add(_limits[i]);
+      periods[i + 1].limit = total_limit;
     }
     period_count = 1 + _timestamps.length;
     current_period = 0;
@@ -268,7 +272,6 @@ contract MultiSigWalletTokenLimit
     internal
     returns (uint transaction_id)
   {
-    require(value > 0);
     transaction_id = transaction_count;
     transactions[transaction_id] = Transaction({
       to: to,
@@ -398,8 +401,6 @@ contract MultiSigWalletTokenLimit
         new_period = i;
     if (new_period != current_period)
     {
-      if (now > periods[current_period].timestamp)
-        current_transferred = 0;
       current_period = new_period;
       emit CurrentPeriodChanged(current_period, current_transferred, periods[current_period].limit);
     }
